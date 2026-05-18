@@ -1,0 +1,34 @@
+# Build output
+MDK-ARM/ThreadX_MQTT_H750_Template/
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvguix
+MDK-ARM/*.uvoptx
+**/*.o
+**/*.d
+**/*.map
+**/*.axf
+**/*.elf
+**/*.hex
+**/*.bin
+**/*.lst
+**/*.crf
+**/*.lnp
+**/*.dep
+**/*.iex
+**/*.bak
+**/*.tmp
+
+# Node tooling
+node_modules/
+.npm-cache/
+
+# Local/editor files
+.vscode/
+.idea/
+*.user
+*.suo
+*.log
+
+# OS files
+Thumbs.db
+Desktop.ini

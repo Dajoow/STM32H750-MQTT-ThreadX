@@ -1,0 +1,12 @@
+{
+  "name": "threadx-mqtt-h750-tools",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "bridge": "node tools/mqtt-cloud-bridge.mjs"
+  },
+  "dependencies": {
+    "mqtt": "^5.14.1"
+  }
+}

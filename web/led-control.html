@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STM32 PB1 LED Control</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f4f7fb;
+      color: #172033;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(620px, 100%);
+      background: #ffffff;
+      border: 1px solid #d9e1ee;
+      border-radius: 8px;
+      box-shadow: 0 18px 50px rgba(24, 38, 63, 0.12);
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .span-2 {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #43516a;
+    }
+
+    input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid #c8d3e2;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 15px;
+      color: #172033;
+      background: #fbfdff;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      border: 1px solid #d9e1ee;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      background: #f8fbff;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #8b98aa;
+    }
+
+    .dot.connected {
+      background: #1f9d55;
+    }
+
+    .dot.error {
+      background: #d83a34;
+    }
+
+    .led-state {
+      color: #43516a;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      height: 44px;
+      border: 0;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .connect {
+      background: #2563eb;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .on {
+      background: #15803d;
+    }
+
+    .off {
+      background: #b42318;
+    }
+
+    .toggle {
+      background: #6d5dfc;
+    }
+
+    pre {
+      height: 170px;
+      margin: 0;
+      overflow: auto;
+      border: 1px solid #d9e1ee;
+      border-radius: 6px;
+      padding: 12px;
+      background: #111827;
+      color: #d1fae5;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 560px) {
+      main {
+        padding: 18px;
+      }
+
+      .grid,
+      .buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2 {
+        grid-column: auto;
+      }
+
+      .status {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>STM32 PB1 LED Control</h1>
+
+    <div class="grid">
+      <div class="row span-2">
+        <label for="brokerUrl">MQTT WebSocket URL</label>
+        <input id="brokerUrl" autocomplete="off" placeholder="wss://your-cluster.s1.eu.hivemq.cloud:8884/mqtt">
+      </div>
+
+      <div class="row">
+        <label for="username">MQTT Username</label>
+        <input id="username" autocomplete="username">
+      </div>
+
+      <div class="row">
+        <label for="password">MQTT Password</label>
+        <input id="password" type="password" autocomplete="current-password">
+      </div>
+
+      <div class="row span-2">
+        <label for="topicPrefix">Topic Prefix</label>
+        <input id="topicPrefix" autocomplete="off" value="stm32/h750">
+      </div>
+    </div>
+
+    <button class="connect" id="connectBtn" type="button">Connect</button>
+
+    <div class="status">
+      <span class="pill"><span class="dot" id="connDot"></span><span id="connText">Disconnected</span></span>
+      <span class="led-state">PB1: <strong id="ledState">Unknown</strong></span>
+    </div>
+
+    <div class="buttons">
+      <button class="on" id="onBtn" type="button" disabled>ON</button>
+      <button class="off" id="offBtn" type="button" disabled>OFF</button>
+      <button class="toggle" id="toggleBtn" type="button" disabled>TOGGLE</button>
+    </div>
+
+    <pre id="log"></pre>
+  </main>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const brokerUrl = document.getElementById("brokerUrl");
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+    const topicPrefix = document.getElementById("topicPrefix");
+    const connectBtn = document.getElementById("connectBtn");
+    const connDot = document.getElementById("connDot");
+    const connText = document.getElementById("connText");
+    const ledState = document.getElementById("ledState");
+    const logBox = document.getElementById("log");
+    const commandButtons = [
+      document.getElementById("onBtn"),
+      document.getElementById("offBtn"),
+      document.getElementById("toggleBtn"),
+    ];
+
+    let client = null;
+
+    function loadSettings() {
+      const localUrl = location.protocol.startsWith("http")
+        ? `ws://${location.hostname}:9001`
+        : "ws://192.168.50.1:9001";
+
+      brokerUrl.value = localStorage.getItem("mqttBrokerUrl") || localUrl;
+      username.value = localStorage.getItem("mqttUsername") || "";
+      topicPrefix.value = localStorage.getItem("mqttTopicPrefix") || "stm32/h750";
+    }
+
+    function saveSettings() {
+      localStorage.setItem("mqttBrokerUrl", brokerUrl.value.trim());
+      localStorage.setItem("mqttUsername", username.value.trim());
+      localStorage.setItem("mqttTopicPrefix", normalizedPrefix());
+    }
+
+    function normalizedPrefix() {
+      return topicPrefix.value.trim().replace(/^\/+|\/+$/g, "") || "stm32/h750";
+    }
+
+    function topics() {
+      const prefix = normalizedPrefix();
+      return {
+        set: `${prefix}/led/set`,
+        state: `${prefix}/led/state`,
+        status: `${prefix}/status`,
+      };
+    }
+
+    function log(line) {
+      const time = new Date().toLocaleTimeString();
+      logBox.textContent += `[${time}] ${line}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function setConnected(connected, text, isError = false) {
+      connText.textContent = text;
+      connDot.className = "dot" + (connected ? " connected" : isError ? " error" : "");
+      connectBtn.textContent = connected ? "Disconnect" : "Connect";
+      [brokerUrl, username, password, topicPrefix].forEach((input) => {
+        input.disabled = connected;
+      });
+      commandButtons.forEach((button) => {
+        button.disabled = !connected;
+      });
+    }
+
+    function publishCommand(command) {
+      if (!client || !client.connected) {
+        log("MQTT is not connected");
+        return;
+      }
+
+      const mqttTopics = topics();
+      client.publish(mqttTopics.set, command, { qos: 0, retain: false });
+      log(`TX ${mqttTopics.set}: ${command}`);
+    }
+
+    function connect() {
+      if (client && client.connected) {
+        client.end(true);
+        return;
+      }
+
+      if (!window.mqtt) {
+        setConnected(false, "MQTT.js load failed", true);
+        log("MQTT.js was not loaded. Check internet access or host mqtt.min.js locally.");
+        return;
+      }
+
+      saveSettings();
+      setConnected(false, "Connecting");
+
+      const mqttTopics = topics();
+      const options = {
+        clientId: "web_led_" + Math.random().toString(16).slice(2, 10),
+        clean: true,
+        connectTimeout: 6000,
+        reconnectPeriod: 1000,
+      };
+
+      if (username.value.trim()) {
+        options.username = username.value.trim();
+        options.password = password.value;
+      }
+
+      client = mqtt.connect(brokerUrl.value.trim(), options);
+
+      client.on("connect", () => {
+        setConnected(true, "Connected");
+        log(`Connected ${brokerUrl.value.trim()}`);
+        client.subscribe([mqttTopics.state, mqttTopics.status], { qos: 0 }, (error) => {
+          if (error) {
+            log(`Subscribe failed: ${error.message}`);
+            return;
+          }
+          log(`Subscribed ${mqttTopics.state}, ${mqttTopics.status}`);
+        });
+      });
+
+      client.on("message", (topic, payload) => {
+        const text = payload.toString();
+        log(`RX ${topic}: ${text}`);
+        if (topic === mqttTopics.state) {
+          ledState.textContent = text;
+        }
+      });
+
+      client.on("close", () => {
+        setConnected(false, "Disconnected");
+      });
+
+      client.on("error", (error) => {
+        setConnected(false, "Connection error", true);
+        log(`Error: ${error.message}`);
+      });
+    }
+
+    loadSettings();
+    connectBtn.addEventListener("click", connect);
+    document.getElementById("onBtn").addEventListener("click", () => publishCommand("ON"));
+    document.getElementById("offBtn").addEventListener("click", () => publishCommand("OFF"));
+    document.getElementById("toggleBtn").addEventListener("click", () => publishCommand("TOGGLE"));
+    log(`Ready: ${brokerUrl.value}`);
+  </script>
+</body>
+</html>
