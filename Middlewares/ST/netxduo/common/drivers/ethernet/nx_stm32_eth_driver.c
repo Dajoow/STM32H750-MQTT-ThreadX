@@ -36,6 +36,18 @@
 /* Define the driver information structure that is only available within this file.  */
 static  NX_DRIVER_INFORMATION nx_driver_information;
 
+volatile UINT nx_driver_debug_step;
+volatile UINT nx_driver_debug_status;
+volatile UINT nx_driver_debug_command;
+volatile INT nx_driver_debug_phy_link_state;
+volatile UINT nx_driver_debug_hal_status;
+volatile UINT nx_driver_debug_rx_alloc_count;
+volatile UINT nx_driver_debug_rx_alloc_fail_count;
+volatile UINT nx_driver_debug_rx_alloc_last_status;
+volatile ULONG nx_driver_debug_rx_alloc_last_packet;
+volatile ULONG nx_driver_debug_rx_alloc_last_buffer;
+volatile UINT nx_driver_debug_rx_alloc_step;
+
 /* Rounded header size */
 static ULONG header_size;
 
@@ -157,6 +169,7 @@ NX_INTERFACE *interface_ptr;
 
   /* Default to successful return.  */
   driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+  nx_driver_debug_command = driver_req_ptr -> nx_ip_driver_command;
 
 #ifdef NX_ENABLE_VLAN
     /* Let link layer to preprocess the driver request and return actual interface.  */
@@ -175,14 +188,20 @@ NX_INTERFACE *interface_ptr;
   case NX_LINK_INTERFACE_ATTACH:
 
     /* Process link interface attach requests.  */
+    nx_driver_debug_step = 10;
     _nx_driver_interface_attach(driver_req_ptr);
+    nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+    nx_driver_debug_step = 11;
     break;
 
   case NX_LINK_INITIALIZE:
     {
 
       /* Process link initialize requests.  */
+      nx_driver_debug_step = 20;
       _nx_driver_initialize(driver_req_ptr);
+      nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+      nx_driver_debug_step = 21;
       break;
     }
 
@@ -190,7 +209,10 @@ NX_INTERFACE *interface_ptr;
     {
 
       /* Process link enable requests.  */
+      nx_driver_debug_step = 30;
       _nx_driver_enable(driver_req_ptr);
+      nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+      nx_driver_debug_step = 31;
       break;
     }
 
@@ -392,6 +414,9 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
   CHAR           *payload_address;       /* Address of the first payload*/
   VOID           *rounded_pool_start;    /* Rounded stating address     */
 
+  nx_driver_debug_step = 100;
+  nx_driver_debug_status = 0;
+
   /* Setup the IP pointer from the driver request.  */
   ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
 
@@ -425,7 +450,10 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
   nx_driver_information.nx_driver_information_deferred_events =       0;
 
   /* Call the hardware-specific ethernet controller initialization.  */
+  nx_driver_debug_step = 110;
   status =  _nx_driver_hardware_initialize(driver_req_ptr);
+  nx_driver_debug_status = status;
+  nx_driver_debug_step = 120;
 
   /* Determine if the request was successful.  */
   if (status == NX_SUCCESS)
@@ -434,14 +462,17 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
     /* Successful hardware initialization.  */
 
     /* Setup driver information to point to IP pointer.  */
+    nx_driver_debug_step = 121;
     nx_driver_information.nx_driver_information_ip_ptr = driver_req_ptr -> nx_ip_driver_ptr;
 
     /* Setup the link maximum transfer unit. */
+    nx_driver_debug_step = 122;
     interface_ptr -> nx_interface_ip_mtu_size =  NX_DRIVER_ETHERNET_MTU - NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Setup the physical address of this IP instance.  Increment the
     physical address lsw to simulate multiple nodes hanging on the
     ethernet.  */
+    nx_driver_debug_step = 123;
     interface_ptr -> nx_interface_physical_address_msw =
       (ULONG)(( eth_handle.Init.MACAddr[0] << 8) | ( eth_handle.Init.MACAddr[1]));
     interface_ptr -> nx_interface_physical_address_lsw =
@@ -450,13 +481,16 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
 
     /* Indicate to the IP software that IP to physical mapping
     is required.  */
+    nx_driver_debug_step = 124;
     interface_ptr -> nx_interface_address_mapping_needed =  NX_TRUE;
 
     /* Move the driver's state to initialized.  */
+    nx_driver_debug_step = 125;
     nx_driver_information.nx_driver_information_state = NX_DRIVER_STATE_INITIALIZED;
 
     /* Indicate successful initialize.  */
     driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    nx_driver_debug_step = 126;
   }
   else
   {
@@ -518,6 +552,9 @@ static VOID  _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr)
   INT             PHYLinkState;
   uint32_t tickstart;
 
+  nx_driver_debug_step = 300;
+  nx_driver_debug_phy_link_state = 0;
+
   /* Setup the IP pointer from the driver request.  */
   ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
 
@@ -539,28 +576,37 @@ static VOID  _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr)
     return;
   }
 
+  nx_driver_debug_step = 310;
   if (nx_eth_phy_init() != ETH_PHY_STATUS_OK)
   {
     driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+    nx_driver_debug_step = 311;
     return;
   }
 
+  nx_driver_debug_step = 320;
   tickstart = HAL_GetTick();
 
   do{
 
     PHYLinkState = nx_eth_phy_get_link_state();
+    nx_driver_debug_phy_link_state = PHYLinkState;
 
   }while((PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN) && ((HAL_GetTick() - tickstart) < PHY_LINK_TIMEOUT));
 
   /* Get link state */
+  nx_driver_debug_step = 330;
   if(PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN)
   {
     driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+    nx_driver_debug_step = 331;
     return;
   }
   else
   {
+    nx_driver_debug_step = 340;
     switch (PHYLinkState)
     {
 #if defined(ETH_PHY_1000MBITS_SUPPORTED)
@@ -596,6 +642,7 @@ case ETH_PHY_STATUS_100MBITS_FULLDUPLEX:
     }
 
     /* Get MAC Config MAC */
+    nx_driver_debug_step = 350;
     HAL_ETH_GetMACConfig(&eth_handle, &MACConf);
     MACConf.DuplexMode = duplex;
     MACConf.Speed = speed;
@@ -605,11 +652,15 @@ if (speed == ETH_SPEED_1000M)
 else
     MACConf.PortSelect = ENABLE;
 #endif
+    nx_driver_debug_step = 360;
     HAL_ETH_SetMACConfig(&eth_handle, &MACConf);
   }
 
   /* Call hardware specific enable.  */
+  nx_driver_debug_step = 370;
   status =  _nx_driver_hardware_enable(driver_req_ptr);
+  nx_driver_debug_status = status;
+  nx_driver_debug_step = 380;
 
   /* Was the hardware enable successful?  */
   if (status == NX_SUCCESS)
@@ -623,12 +674,15 @@ else
 
     /* Mark the IP instance as link up.  */
     ip_ptr -> nx_ip_driver_link_up =  NX_TRUE;
+    nx_driver_debug_step = 390;
   }
   else
   {
 
     /* Enable failed.  Indicate that the request failed.  */
     driver_req_ptr -> nx_ip_driver_status =   NX_DRIVER_ERROR;
+    nx_driver_debug_status = driver_req_ptr -> nx_ip_driver_status;
+    nx_driver_debug_step = 391;
   }
 }
 
@@ -1645,6 +1699,8 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
   uint32_t ch;
 #endif
 
+  nx_driver_debug_step = 200;
+
   /* Default to successful return.  */
   driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
 
@@ -1672,13 +1728,17 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
   }
 
 #ifdef NX_DRIVER_ETH_HW_IP_INIT
+  nx_driver_debug_step = 210;
   nx_eth_init();
 #endif /* NX_DRIVER_ETH_HW_IP_INIT */
 
   ETH_DMAConfigTypeDef dmaDefaultConf;
 
+  nx_driver_debug_step = 220;
   memset(&dmaDefaultConf, 0, sizeof(ETH_DMAConfigTypeDef));
+  nx_driver_debug_step = 230;
   HAL_ETH_GetDMAConfig(&eth_handle, &dmaDefaultConf);
+  nx_driver_debug_step = 240;
 
   /*--------------- ETHERNET DMA registers default Configuration --------------*/
 #ifdef ETH_MULTIQUEUE_SUPPORTED
@@ -1744,7 +1804,9 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 #endif /* ETH_MULTIQUEUE_SUPPORTED */
 
   /* enable OSF bit to enhance throughput */
+  nx_driver_debug_step = 250;
   HAL_ETH_SetDMAConfig(&eth_handle, &dmaDefaultConf);
+  nx_driver_debug_step = 260;
 #ifdef STM32_ETH_PROMISCUOUS_ENABLE
   FilterConfig.PromiscuousMode = ENABLE;
 #else
@@ -1817,13 +1879,17 @@ static UINT  _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr)
 {
   HAL_StatusTypeDef hal_status;
 
+  nx_driver_debug_step = 371;
   hal_status = HAL_ETH_Start_IT(&eth_handle);
+  nx_driver_debug_hal_status = hal_status;
+  nx_driver_debug_step = 372;
   if (hal_status != HAL_OK)
   {
     return(NX_DRIVER_ERROR);
   }
 
   /* Return success!  */
+  nx_driver_debug_step = 373;
   return(NX_SUCCESS);
 }
 
@@ -2321,19 +2387,32 @@ void HAL_ETH_RxAllocateCallback(uint8_t ** buff)
   NX_PACKET     *packet_ptr;
   UINT          status;
 
+  nx_driver_debug_rx_alloc_step = 1;
+  nx_driver_debug_rx_alloc_count++;
+  nx_driver_debug_rx_alloc_step = 2;
   status = nx_packet_allocate(nx_driver_information.nx_driver_information_packet_pool_ptr, &packet_ptr,
                               NX_RECEIVE_PACKET, NX_NO_WAIT);
+  nx_driver_debug_rx_alloc_step = 3;
+  nx_driver_debug_rx_alloc_last_status = status;
   if (status == NX_SUCCESS)
   {
     /* Adjust the packet.  */
+    nx_driver_debug_rx_alloc_step = 4;
     packet_ptr -> nx_packet_prepend_ptr += 2;
+    nx_driver_debug_rx_alloc_step = 5;
     invalidate_cache_by_addr((uint32_t*)packet_ptr -> nx_packet_data_start, packet_ptr -> nx_packet_data_end - packet_ptr -> nx_packet_data_start);
+    nx_driver_debug_rx_alloc_step = 6;
     *buff = packet_ptr -> nx_packet_prepend_ptr;
+    nx_driver_debug_rx_alloc_last_packet = (ULONG)packet_ptr;
+    nx_driver_debug_rx_alloc_last_buffer = (ULONG)*buff;
+    nx_driver_debug_rx_alloc_step = 7;
   }
   else
   {
     /* Rx Buffer Pool is exhausted. */
     *buff = NULL;
+    nx_driver_debug_rx_alloc_fail_count++;
+    nx_driver_debug_rx_alloc_step = 8;
   }
 }
 

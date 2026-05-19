@@ -51,6 +51,7 @@
 /* USER CODE BEGIN PV */
 #define BLINK_THREAD_STACK_SIZE 1024
 #define NETX_INIT_THREAD_STACK_SIZE 4096
+#define NETX_INIT_ENABLE 1
 
 static TX_THREAD blink_thread;
 static UCHAR blink_thread_stack[BLINK_THREAD_STACK_SIZE];
@@ -61,6 +62,7 @@ static UCHAR netx_init_byte_pool_buffer[NX_APP_MEM_POOL_SIZE] __attribute__((sec
 
 volatile UINT netx_init_thread_step;
 volatile UINT netx_init_thread_status;
+volatile UINT blink_thread_count;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -142,9 +144,9 @@ HAL_GPIO_WritePin(RELAY_GPIO_Port, RELAY_Pin, GPIO_PIN_SET);
 static VOID blink_thread_entry(ULONG thread_input)
 {
   (void)thread_input;
-  HAL_GPIO_WritePin(RELAY_GPIO_Port, RELAY_Pin, GPIO_PIN_RESET);
   for (;;)
   {
+    blink_thread_count++;
     HAL_GPIO_TogglePin(RELAY_GPIO_Port, RELAY_Pin);
     tx_thread_sleep(1000);
   }
@@ -156,6 +158,11 @@ static VOID netx_init_thread_entry(ULONG thread_input)
 
   netx_init_thread_step = 1;
   tx_thread_sleep(2 * TX_TIMER_TICKS_PER_SECOND);
+
+#if (NETX_INIT_ENABLE == 0)
+  netx_init_thread_step = 100;
+  tx_thread_suspend(tx_thread_identify());
+#endif
 
   netx_init_thread_step = 2;
   netx_init_thread_status = tx_byte_pool_create(&netx_init_byte_pool,

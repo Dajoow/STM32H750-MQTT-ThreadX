@@ -34,14 +34,18 @@ __attribute__((at(0x30000080))) ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT
 
 #elif defined ( __GNUC__ ) /* GNU Compiler */
 
-ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT] __attribute__((section(".RxDescripSection"))); /* Ethernet Rx DMA Descriptors */
-ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDescripSection")));   /* Ethernet Tx DMA Descriptors */
+ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT] __attribute__((section(".RxDescripSection"), aligned(32))); /* Ethernet Rx DMA Descriptors */
+ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDescripSection"), aligned(32)));   /* Ethernet Tx DMA Descriptors */
 
 #endif
 ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT * 2U];
 ETH_TxPacketConfig TxConfig;
 
 /* USER CODE BEGIN 0 */
+volatile uint32_t eth_dma_rx_desc_addr;
+volatile uint32_t eth_dma_tx_desc_addr;
+volatile uint32_t eth_dma_rx_desc_align;
+volatile uint32_t eth_dma_tx_desc_align;
 
 /* USER CODE END 0 */
 
@@ -72,6 +76,10 @@ void MX_ETH_Init(void)
   heth.Init.TxDesc = DMATxDscrTab;
   heth.Init.RxDesc = DMARxDscrTab;
   heth.Init.RxBuffLen = 1536;
+  eth_dma_rx_desc_addr = (uint32_t)DMARxDscrTab;
+  eth_dma_tx_desc_addr = (uint32_t)DMATxDscrTab;
+  eth_dma_rx_desc_align = eth_dma_rx_desc_addr & 0x1FU;
+  eth_dma_tx_desc_align = eth_dma_tx_desc_addr & 0x1FU;
 
   /* USER CODE BEGIN MACADDRESS */
 

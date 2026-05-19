@@ -278,7 +278,7 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
   /* Create the main thread */
   nx_app_init_step = 13;
   ret = tx_thread_create(&NxAppThread, "NetXDuo App thread", nx_app_thread_entry , 0, pointer, NX_APP_THREAD_STACK_SIZE,
-                         NX_APP_THREAD_PRIORITY, NX_APP_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_AUTO_START);
+                         NX_APP_THREAD_PRIORITY, NX_APP_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_DONT_START);
   nx_app_init_status = ret;
 
   if (ret != TX_SUCCESS)
@@ -314,7 +314,7 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
                          MQTT_APP_THREAD_PRIORITY,
                          MQTT_APP_THREAD_PRIORITY,
                          TX_NO_TIME_SLICE,
-                         TX_AUTO_START);
+                         TX_DONT_START);
   nx_app_init_status = ret;
 
   /* USER CODE END MX_NetXDuo_Init */

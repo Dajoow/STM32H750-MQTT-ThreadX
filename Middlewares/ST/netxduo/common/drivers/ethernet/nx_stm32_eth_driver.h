@@ -117,7 +117,10 @@ __STATIC_FORCEINLINE void __nx_stm32_invalidate_cache_by_addr(uint32_t start, ui
   uint32_t current = start & ~31U;
   uint32_t end = (start + size + 31U) & ~31U;
 
-  SCB_InvalidateDCache_by_Addr((void *)current, (int32_t)(end - current));
+  if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
+  {
+    SCB_InvalidateDCache_by_Addr((void *)current, (int32_t)(end - current));
+  }
 }
 
 __STATIC_FORCEINLINE void __nx_stm32_clean_cache_by_addr(uint32_t start, uint32_t size)
@@ -125,7 +128,10 @@ __STATIC_FORCEINLINE void __nx_stm32_clean_cache_by_addr(uint32_t start, uint32_
   uint32_t current = start & ~31U;
   uint32_t end = (start + size + 31U) & ~31U;
 
-  SCB_CleanDCache_by_Addr((uint32_t *)current, (int32_t)(end - current));
+  if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
+  {
+    SCB_CleanDCache_by_Addr((uint32_t *)current, (int32_t)(end - current));
+  }
 }
 
 #define invalidate_cache_by_addr(__ptr__, __size__)                  __nx_stm32_invalidate_cache_by_addr((uint32_t)(__ptr__), (uint32_t)(__size__))
