@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
 #include "main.h"
-#include "eth.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
@@ -37,8 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define IO_EXPANDER_I2C_ADDRESS       (0x20U << 1)
-#define IO_EXPANDER_ETH_RESET_PIN     (1U << 7)
 
 /* USER CODE END PD */
 
@@ -62,17 +59,6 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static void ETH_PHY_ResetRelease(void)
-{
-  uint8_t io_state = 0xFFU;
-
-  (void)HAL_I2C_Master_Transmit(&hi2c2, IO_EXPANDER_I2C_ADDRESS, &io_state, 1, HAL_MAX_DELAY);
-  HAL_Delay(10);
-
-  io_state &= (uint8_t)~IO_EXPANDER_ETH_RESET_PIN;
-  (void)HAL_I2C_Master_Transmit(&hi2c2, IO_EXPANDER_I2C_ADDRESS, &io_state, 1, HAL_MAX_DELAY);
-  HAL_Delay(100);
-}
 
 /* USER CODE END 0 */
 
@@ -111,10 +97,9 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  /* Keep Ethernet disabled while validating ThreadX/blink startup. */
-  ETH_PHY_ResetRelease();
-  MX_ETH_Init();
+  
   /* USER CODE END 2 */
 
   MX_ThreadX_Init();
@@ -195,7 +180,7 @@ void SystemClock_Config(void)
 int _write(int file, char *ptr, int len)
 {
   (void)file;
-  if (HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY) == HAL_OK)
+  if (HAL_UART_Transmit(&huart3, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY) == HAL_OK)
   {
     return len;
   }

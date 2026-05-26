@@ -28,7 +28,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app_azure_rtos_config.h"
-#include "app_netxduo.h"
 #include "esp8266.h"
 #include "main.h"
 #include <stdio.h>
@@ -52,18 +51,10 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 #define BLINK_THREAD_STACK_SIZE 1024
-#define NETX_INIT_THREAD_STACK_SIZE 4096
-#define NETX_INIT_ENABLE 1
 
 static TX_THREAD blink_thread;
 static UCHAR blink_thread_stack[BLINK_THREAD_STACK_SIZE];
-static TX_THREAD netx_init_thread;
-static UCHAR netx_init_thread_stack[NETX_INIT_THREAD_STACK_SIZE];
-static TX_BYTE_POOL netx_init_byte_pool;
-static UCHAR netx_init_byte_pool_buffer[NX_APP_MEM_POOL_SIZE] __attribute__((section(".bss.RAM_D1"), aligned(32)));
 
-volatile UINT netx_init_thread_step;
-volatile UINT netx_init_thread_status;
 volatile UINT blink_thread_count;
 volatile UINT wifi_service_status;
 /* USER CODE END PV */
@@ -71,7 +62,6 @@ volatile UINT wifi_service_status;
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 static VOID blink_thread_entry(ULONG thread_input);
-static VOID netx_init_thread_entry(ULONG thread_input);
 static UINT wifi_service_init(TX_BYTE_POOL *pool);
 /* USER CODE END PFP */
 
@@ -105,19 +95,8 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   {
     Error_Handler();
   }
-
-  ret = tx_thread_create(&netx_init_thread,
-                         "netx_init_thread",
-                         netx_init_thread_entry,
-                         0,
-                         netx_init_thread_stack,
-                         sizeof(netx_init_thread_stack),
-                         16,
-                         16,
-                         TX_NO_TIME_SLICE,
-                         TX_AUTO_START);
-
-  if (ret != TX_SUCCESS)
+  wifi_service_status = wifi_service_init(TX_NULL);
+  if (wifi_service_status != TX_SUCCESS)
   {
     Error_Handler();
   }
@@ -156,40 +135,6 @@ static VOID blink_thread_entry(ULONG thread_input)
   }
 }
 
-static VOID netx_init_thread_entry(ULONG thread_input)
-{
-  (void)thread_input;
-
-  netx_init_thread_step = 1;
-  tx_thread_sleep(2 * TX_TIMER_TICKS_PER_SECOND);
-
-#if (NETX_INIT_ENABLE == 0)
-  netx_init_thread_step = 100;
-  tx_thread_suspend(tx_thread_identify());
-#endif
-
-  netx_init_thread_step = 2;
-  netx_init_thread_status = tx_byte_pool_create(&netx_init_byte_pool,
-                                                "NetX deferred pool",
-                                                netx_init_byte_pool_buffer,
-                                                sizeof(netx_init_byte_pool_buffer));
-  if (netx_init_thread_status != TX_SUCCESS)
-  {
-    tx_thread_suspend(tx_thread_identify());
-  }
-
-  netx_init_thread_step = 3;
-  wifi_service_status = wifi_service_init(&netx_init_byte_pool);
-
-  netx_init_thread_step = 4;
-  netx_init_thread_status = MX_NetXDuo_Init(&netx_init_byte_pool);
-
-  netx_init_thread_step = 5;
-  tx_thread_sleep(TX_TIMER_TICKS_PER_SECOND);
-
-  netx_init_thread_step = 6;
-  tx_thread_suspend(tx_thread_identify());
-}
 
 static UINT wifi_service_init(TX_BYTE_POOL *pool)
 {

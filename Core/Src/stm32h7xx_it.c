@@ -43,11 +43,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-volatile uint32_t fault_debug_handler;
-volatile uint32_t fault_debug_cfsr;
-volatile uint32_t fault_debug_hfsr;
-volatile uint32_t fault_debug_bfar;
-volatile uint32_t fault_debug_mmfar;
 
 /* USER CODE END PV */
 
@@ -62,7 +57,6 @@ volatile uint32_t fault_debug_mmfar;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern ETH_HandleTypeDef heth;
 extern TIM_HandleTypeDef htim6;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -95,11 +89,6 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-  fault_debug_handler = 1;
-  fault_debug_cfsr = SCB->CFSR;
-  fault_debug_hfsr = SCB->HFSR;
-  fault_debug_bfar = SCB->BFAR;
-  fault_debug_mmfar = SCB->MMFAR;
 
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
@@ -115,11 +104,6 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-  fault_debug_handler = 2;
-  fault_debug_cfsr = SCB->CFSR;
-  fault_debug_hfsr = SCB->HFSR;
-  fault_debug_bfar = SCB->BFAR;
-  fault_debug_mmfar = SCB->MMFAR;
 
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
@@ -135,11 +119,6 @@ void MemManage_Handler(void)
 void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
-  fault_debug_handler = 3;
-  fault_debug_cfsr = SCB->CFSR;
-  fault_debug_hfsr = SCB->HFSR;
-  fault_debug_bfar = SCB->BFAR;
-  fault_debug_mmfar = SCB->MMFAR;
 
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
@@ -155,11 +134,6 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
-  fault_debug_handler = 4;
-  fault_debug_cfsr = SCB->CFSR;
-  fault_debug_hfsr = SCB->HFSR;
-  fault_debug_bfar = SCB->BFAR;
-  fault_debug_mmfar = SCB->MMFAR;
 
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
@@ -206,16 +180,6 @@ void TIM6_DAC_IRQHandler(void)
 /**
   * @brief This function handles Ethernet global interrupt.
   */
-void ETH_IRQHandler(void)
-{
-  /* USER CODE BEGIN ETH_IRQn 0 */
-
-  /* USER CODE END ETH_IRQn 0 */
-  HAL_ETH_IRQHandler(&heth);
-  /* USER CODE BEGIN ETH_IRQn 1 */
-
-  /* USER CODE END ETH_IRQn 1 */
-}
 
 /**
   * @brief This function handles USART1 global interrupt.
