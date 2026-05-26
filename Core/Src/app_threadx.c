@@ -29,7 +29,9 @@
 /* USER CODE BEGIN Includes */
 #include "app_azure_rtos_config.h"
 #include "app_netxduo.h"
+#include "esp8266.h"
 #include "main.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,12 +65,14 @@ static UCHAR netx_init_byte_pool_buffer[NX_APP_MEM_POOL_SIZE] __attribute__((sec
 volatile UINT netx_init_thread_step;
 volatile UINT netx_init_thread_status;
 volatile UINT blink_thread_count;
+volatile UINT wifi_service_status;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 static VOID blink_thread_entry(ULONG thread_input);
 static VOID netx_init_thread_entry(ULONG thread_input);
+static UINT wifi_service_init(TX_BYTE_POOL *pool);
 /* USER CODE END PFP */
 
 /**
@@ -175,12 +179,28 @@ static VOID netx_init_thread_entry(ULONG thread_input)
   }
 
   netx_init_thread_step = 3;
-  netx_init_thread_status = MX_NetXDuo_Init(&netx_init_byte_pool);
+  wifi_service_status = wifi_service_init(&netx_init_byte_pool);
 
   netx_init_thread_step = 4;
-  tx_thread_sleep(TX_TIMER_TICKS_PER_SECOND);
+  netx_init_thread_status = MX_NetXDuo_Init(&netx_init_byte_pool);
 
   netx_init_thread_step = 5;
+  tx_thread_sleep(TX_TIMER_TICKS_PER_SECOND);
+
+  netx_init_thread_step = 6;
   tx_thread_suspend(tx_thread_identify());
+}
+
+static UINT wifi_service_init(TX_BYTE_POOL *pool)
+{
+  UINT status;
+
+  status = esp8266_service_init(pool);
+  if (status != TX_SUCCESS)
+  {
+    printf("[E][WIFI] service init failed: %u\r\n", (unsigned int)status);
+  }
+
+  return status;
 }
 /* USER CODE END 2 */

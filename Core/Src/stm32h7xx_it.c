@@ -22,6 +22,8 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usart.h"
+#include "esp8266.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +64,8 @@ volatile uint32_t fault_debug_mmfar;
 /* External variables --------------------------------------------------------*/
 extern ETH_HandleTypeDef heth;
 extern TIM_HandleTypeDef htim6;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN EV */
 
@@ -213,6 +217,62 @@ void ETH_IRQHandler(void)
   /* USER CODE END ETH_IRQn 1 */
 }
 
+/**
+  * @brief This function handles USART1 global interrupt.
+  */
+void USART1_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart1);
+}
+
+/**
+  * @brief This function handles DMA1 stream0 global interrupt.
+  */
+void DMA1_Stream0_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+}
+
+/**
+  * @brief This function handles DMA1 stream1 global interrupt.
+  */
+void DMA1_Stream1_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart1_tx);
+}
+
 /* USER CODE BEGIN 1 */
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+  (void)Size;
+  if (huart->Instance == USART1)
+  {
+    esp8266_uart_rx_event_isr();
+  }
+}
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    esp8266_uart_rx_half_isr();
+  }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    esp8266_uart_rx_cplt_isr();
+  }
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    esp8266_uart_tx_cplt_isr();
+  }
+}
 
 /* USER CODE END 1 */

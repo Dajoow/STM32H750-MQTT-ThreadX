@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_PWR_LDO_SUPPLY,TX_INCLUDE_USER_DEFINE_FILE,NX_INCLUDE_USER_DEFINE_FILE,USE_HAL_DRIVER,STM32H750xx,FX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../NetXDuo/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/netxduo/addons/mqtt/;../Middlewares/ST/netxduo/addons/dhcp/;../Middlewares/ST/netxduo/common/inc/;../Middlewares/ST/netxduo/ports/cortex_m7/ac5/inc/;../Middlewares/ST/netxduo/addons/web/;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;../NetXDuo/Target;../Drivers/BSP/Components/lan8742/;../Middlewares/ST/netxduo/common/drivers/ethernet/;..\Middlewares\ST\netxduo\addons\dns;..\Middlewares\ST\netxduo\nx_secure\inc;..\Middlewares\ST\netxduo\crypto_libraries\inc;..\Middlewares\ST\netxduo\crypto_libraries\ports\cortex_m7\ac6\inc;..\Middlewares\ST\netxduo\nx_secure\ports</IncludePath>
+              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../NetXDuo/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/netxduo/addons/mqtt/;../Middlewares/ST/netxduo/addons/dhcp/;../Middlewares/ST/netxduo/common/inc/;../Middlewares/ST/netxduo/ports/cortex_m7/ac5/inc/;../Middlewares/ST/netxduo/addons/web/;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;../NetXDuo/Target;../Drivers/BSP/Components/lan8742/;../Middlewares/ST/netxduo/common/drivers/ethernet/;..\Middlewares\ST\netxduo\addons\dns;..\Middlewares\ST\netxduo\nx_secure\inc;..\Middlewares\ST\netxduo\crypto_libraries\inc;..\Middlewares\ST\netxduo\crypto_libraries\ports\cortex_m7\ac6\inc;..\Middlewares\ST\netxduo\nx_secure\ports;..\App\esp8266</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -357,7 +357,7 @@
               <MiscControls></MiscControls>
               <Define>TX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Core\Inc;..\Middlewares\ST\netxduo\addons\dns;..\Middlewares\ST\netxduo\nx_secure\inc;..\Middlewares\ST\netxduo\crypto_libraries\inc;..\Middlewares\ST\netxduo\crypto_libraries\ports\cortex_m7\ac6\inc;..\Middlewares\ST\netxduo\nx_secure\ports</IncludePath>
+              <IncludePath>..\Core\Inc;..\Middlewares\ST\netxduo\addons\dns;..\Middlewares\ST\netxduo\nx_secure\inc;..\Middlewares\ST\netxduo\crypto_libraries\inc;..\Middlewares\ST\netxduo\crypto_libraries\ports\cortex_m7\ac6\inc;..\Middlewares\ST\netxduo\nx_secure\ports;..\App\esp8266</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -462,6 +462,36 @@
               <FileName>app_netxduo.c</FileName>
               <FileType>1</FileType>
               <FilePath>../NetXDuo/App/app_netxduo.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/App/esp8266</GroupName>
+          <Files>
+            <File>
+              <FileName>esp8266.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/esp8266/esp8266.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp8266_at.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/esp8266/esp8266_at.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp8266_mqtt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/esp8266/esp8266_mqtt.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp8266_parser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/esp8266/esp8266_parser.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp8266_ringbuf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/esp8266/esp8266_ringbuf.c</FilePath>
             </File>
           </Files>
         </Group>

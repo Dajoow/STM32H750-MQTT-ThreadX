@@ -23,6 +23,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -191,7 +192,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+int _write(int file, char *ptr, int len)
+{
+  (void)file;
+  if (HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY) == HAL_OK)
+  {
+    return len;
+  }
+  return 0;
+}
 /* USER CODE END 4 */
 
  /* MPU Configuration */
@@ -275,3 +284,5 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+
