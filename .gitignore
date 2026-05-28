@@ -29,6 +29,9 @@ node_modules/
 *.suo
 *.log
 
+# Local secrets
+App/WIFI_8266/wifi_8266_secrets.h
+
 # OS files
 Thumbs.db
 Desktop.ini

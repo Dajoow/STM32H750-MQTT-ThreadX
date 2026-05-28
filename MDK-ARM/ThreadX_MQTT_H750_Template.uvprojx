@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_PWR_LDO_SUPPLY,TX_INCLUDE_USER_DEFINE_FILE,USE_HAL_DRIVER,STM32H750xx,FX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/</IncludePath>
+              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;../App/WIFI_8266</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -447,6 +447,21 @@
               <FileName>app_azure_rtos.c</FileName>
               <FileType>1</FileType>
               <FilePath>../AZURE_RTOS/App/app_azure_rtos.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/App/WIFI_8266</GroupName>
+          <Files>
+            <File>
+              <FileName>wifi_8266.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/WIFI_8266/wifi_8266.c</FilePath>
+            </File>
+            <File>
+              <FileName>sensor_data.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/WIFI_8266/sensor_data.c</FilePath>
             </File>
           </Files>
         </Group>
