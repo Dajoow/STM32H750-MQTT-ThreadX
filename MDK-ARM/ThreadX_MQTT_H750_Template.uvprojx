@@ -189,7 +189,7 @@
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <nSecure>0</nSecure>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_PWR_LDO_SUPPLY,TX_INCLUDE_USER_DEFINE_FILE,USE_HAL_DRIVER,STM32H750xx,FX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;..\App\esp8266</IncludePath>
+              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -357,7 +357,7 @@
               <MiscControls></MiscControls>
               <Define>TX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Core\Inc;..\App\esp8266</IncludePath>
+              <IncludePath>..\Core\Inc</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -447,36 +447,6 @@
               <FileName>app_azure_rtos.c</FileName>
               <FileType>1</FileType>
               <FilePath>../AZURE_RTOS/App/app_azure_rtos.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Application/User/App/esp8266</GroupName>
-          <Files>
-            <File>
-              <FileName>esp8266.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../App/esp8266/esp8266.c</FilePath>
-            </File>
-            <File>
-              <FileName>esp8266_at.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../App/esp8266/esp8266_at.c</FilePath>
-            </File>
-            <File>
-              <FileName>esp8266_mqtt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../App/esp8266/esp8266_mqtt.c</FilePath>
-            </File>
-            <File>
-              <FileName>esp8266_parser.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../App/esp8266/esp8266_parser.c</FilePath>
-            </File>
-            <File>
-              <FileName>esp8266_ringbuf.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../App/esp8266/esp8266_ringbuf.c</FilePath>
             </File>
           </Files>
         </Group>

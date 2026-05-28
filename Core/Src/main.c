@@ -70,7 +70,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+    
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -99,7 +99,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  
+//  printf("USART3 log alive\r\n");
   /* USER CODE END 2 */
 
   MX_ThreadX_Init();
@@ -177,15 +177,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  if (HAL_UART_Transmit(&huart3, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY) == HAL_OK)
-  {
-    return len;
-  }
-  return 0;
-}
+
 /* USER CODE END 4 */
 
  /* MPU Configuration */
@@ -250,6 +242,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+      
   }
   /* USER CODE END Error_Handler_Debug */
 }

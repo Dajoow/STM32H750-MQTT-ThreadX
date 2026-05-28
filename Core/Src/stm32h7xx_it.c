@@ -23,7 +23,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usart.h"
-#include "esp8266.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +42,11 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+volatile uint32_t fault_debug_cfsr;
+volatile uint32_t fault_debug_hfsr;
+volatile uint32_t fault_debug_bfar;
+volatile uint32_t fault_debug_mmfar;
+volatile uint32_t fault_debug_icsr;
 
 /* USER CODE END PV */
 
@@ -58,8 +62,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim6;
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN EV */
 
@@ -89,7 +91,11 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+fault_debug_cfsr = SCB->CFSR;
+fault_debug_hfsr = SCB->HFSR;
+fault_debug_bfar = SCB->BFAR;
+fault_debug_mmfar = SCB->MMFAR;
+fault_debug_icsr = SCB->ICSR;
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -178,15 +184,17 @@ void TIM6_DAC_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles Ethernet global interrupt.
-  */
-
-/**
   * @brief This function handles USART1 global interrupt.
   */
 void USART1_IRQHandler(void)
 {
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
 }
 
 /**
@@ -194,7 +202,13 @@ void USART1_IRQHandler(void)
   */
 void DMA1_Stream0_IRQHandler(void)
 {
+  /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream0_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart1_rx);
+  /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream0_IRQn 1 */
 }
 
 /**
@@ -202,41 +216,16 @@ void DMA1_Stream0_IRQHandler(void)
   */
 void DMA1_Stream1_IRQHandler(void)
 {
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart1_tx);
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream1_IRQn 1 */
 }
+
 
 /* USER CODE BEGIN 1 */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-  (void)Size;
-  if (huart->Instance == USART1)
-  {
-    esp8266_uart_rx_event_isr();
-  }
-}
-
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
-{
-  if (huart->Instance == USART1)
-  {
-    esp8266_uart_rx_half_isr();
-  }
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  if (huart->Instance == USART1)
-  {
-    esp8266_uart_rx_cplt_isr();
-  }
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-  if (huart->Instance == USART1)
-  {
-    esp8266_uart_tx_cplt_isr();
-  }
-}
 
 /* USER CODE END 1 */
