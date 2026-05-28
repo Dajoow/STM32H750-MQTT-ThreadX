@@ -18,9 +18,9 @@
 
 #define WIFI8266_TELEMETRY_PERIOD_TICKS 2000U
 
-/* AM2320 one-wire data pin is defined in Core/Inc/main.h:
- * AM2320_Pin / AM2320_GPIO_Port.
+/* DHT11 one-wire data pin is defined in Core/Inc/main.h:
+ * DTH11_Pin / DTH11_GPIO_Port.
  */
-#define SENSOR_DQ_SELF_TEST_ENABLE 1U
+#define SENSOR_DQ_SELF_TEST_ENABLE 0U
 
 #endif /* WIFI_8266_CONFIG_H */
