@@ -53,6 +53,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(KEEP_GPIO_Port, KEEP_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_CTRL_GPIO_Port, LED_CTRL_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DTH11_GPIO_Port, DTH11_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : RELAY_Pin LED_CTRL_Pin */
   GPIO_InitStruct.Pin = KEEP_Pin|LED_CTRL_Pin;
@@ -60,6 +61,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(KEEP_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : AM2320_Pin */
+  GPIO_InitStruct.Pin = DTH11_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(DTH11_GPIO_Port, &GPIO_InitStruct);
 
 }
 

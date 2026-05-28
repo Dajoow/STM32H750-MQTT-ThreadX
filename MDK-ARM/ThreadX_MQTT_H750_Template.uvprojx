@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_PWR_LDO_SUPPLY,TX_INCLUDE_USER_DEFINE_FILE,USE_HAL_DRIVER,STM32H750xx,FX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;../App/WIFI_8266</IncludePath>
+              <IncludePath>../Core/Inc;../AZURE_RTOS/App;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Middlewares/ST/threadx/common/inc/;../Middlewares/ST/threadx/ports/cortex_m7/ac6/inc/;../FileX/App;../Middlewares/ST/filex/common/inc/;../Middlewares/ST/filex/ports/generic/inc/;../App/WIFI_8266;..\Drivers\BSP\Components\Delay;..\Drivers\BSP\Components\DHT11;..\Drivers\BSP\Components\IIC;..\Drivers\BSP\Components\PCF8574</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -357,7 +357,7 @@
               <MiscControls></MiscControls>
               <Define>TX_INCLUDE_USER_DEFINE_FILE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Core\Inc</IncludePath>
+              <IncludePath>..\Core\Inc;..\Drivers\BSP\Components\AM2320</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -22980,6 +22980,31 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Drivers\BSP</GroupName>
+          <Files>
+            <File>
+              <FileName>pcf8574.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\BSP\Components\PCF8574\pcf8574.c</FilePath>
+            </File>
+            <File>
+              <FileName>myiic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\BSP\Components\IIC\myiic.c</FilePath>
+            </File>
+            <File>
+              <FileName>dht11.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\BSP\Components\DHT11\dht11.c</FilePath>
+            </File>
+            <File>
+              <FileName>dwt_delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\BSP\Components\Delay\dwt_delay.c</FilePath>
             </File>
           </Files>
         </Group>

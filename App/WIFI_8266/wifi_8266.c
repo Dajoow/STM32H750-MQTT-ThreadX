@@ -255,7 +255,7 @@ static UINT wifi8266_publish_telemetry(const sensor_data_t *data)
                  (long)(data->temperature_c_x100 >= 0 ? data->temperature_c_x100 % 100 : -(data->temperature_c_x100 % 100)),
                  (long)(data->humidity_rh_x100 / 100),
                  (long)(data->humidity_rh_x100 >= 0 ? data->humidity_rh_x100 % 100 : -(data->humidity_rh_x100 % 100)),
-                 (unsigned int)data->raw_value,
+                 (unsigned int)data->debug_value,
                  (unsigned int)data->valid);
 
   return wifi8266_mqtt_publish(WIFI8266_TOPIC_TELEMETRY, payload);

@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "dwt_delay.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +59,15 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//void DWT_Init(void) 
+//{
+//    // 1. 开启跟踪外设时钟
+//    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+//    // 2. 清空计数器
+//    DWT->CYCCNT = 0;
+//    // 3. 开启 CYCCNT 计数器
+//    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+//}
 /* USER CODE END 0 */
 
 /**
@@ -99,7 +107,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-//  printf("USART3 log alive\r\n");
+    DWT_Init();
   /* USER CODE END 2 */
 
   MX_ThreadX_Init();

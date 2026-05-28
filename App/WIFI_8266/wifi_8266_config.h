@@ -16,6 +16,11 @@
 #define WIFI8266_TOPIC_STATUS    "stm32h750/esp8266_001/status"
 #define WIFI8266_TOPIC_COMMAND   "stm32h750/esp8266_001/command"
 
-#define WIFI8266_TELEMETRY_PERIOD_TICKS 1000U
+#define WIFI8266_TELEMETRY_PERIOD_TICKS 2000U
+
+/* AM2320 one-wire data pin is defined in Core/Inc/main.h:
+ * AM2320_Pin / AM2320_GPIO_Port.
+ */
+#define SENSOR_DQ_SELF_TEST_ENABLE 1U
 
 #endif /* WIFI_8266_CONFIG_H */

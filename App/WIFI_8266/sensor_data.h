@@ -15,6 +15,7 @@ typedef struct
   int32_t temperature_c_x100;
   int32_t humidity_rh_x100;
   uint16_t raw_value;
+  uint16_t debug_value;
   uint8_t valid;
 } sensor_data_t;
 
