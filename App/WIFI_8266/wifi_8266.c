@@ -11,7 +11,7 @@
 #define WIFI8266_RX_RING_SIZE 512U
 #define WIFI8266_RESP_BUF_SIZE 768U
 #define WIFI8266_CMD_BUF_SIZE 512U
-#define WIFI8266_JSON_BUF_SIZE 256U
+#define WIFI8266_JSON_BUF_SIZE 768U
 
 static uint8_t wifi8266_rx_byte;
 static uint8_t wifi8266_rx_ring[WIFI8266_RX_RING_SIZE];
@@ -37,9 +37,16 @@ static void wifi8266_rx_flush(void);
 static UINT wifi8266_connect_wifi(void);
 static UINT wifi8266_connect_mqtt(void);
 static UINT wifi8266_subscribe_command(void);
+static UINT wifi8266_publish_node_registry(void);
+static UINT wifi8266_publish_availability(const char *state);
 static UINT wifi8266_publish_status(const char *state);
+static UINT wifi8266_publish_node_status(const char *topic, const char *node_id, const char *type, const char *state);
+static UINT wifi8266_publish_preset_node_status(void);
 static UINT wifi8266_publish_telemetry(const sensor_data_t *data);
+static UINT wifi8266_publish_nodes_telemetry(const sensor_data_t *data);
 static UINT wifi8266_mqtt_publish(const char *topic, const char *payload);
+static UINT wifi8266_mqtt_publish_ex(const char *topic, const char *payload, UINT retain);
+static void wifi8266_report_offline(void);
 static void wifi8266_monitor_urc(UINT quiet_timeout);
 static void wifi8266_handle_subrecv(const char *response);
 
@@ -101,24 +108,23 @@ void wifi8266_service_thread_entry(ULONG thread_input)
     if (wifi8266_subscribe_command() != TX_SUCCESS)
     {
       wifi8266_debug_write("[ESP8266] command subscribe failed, retry later\r\n");
+      wifi8266_report_offline();
       tx_thread_sleep(3000U);
       continue;
     }
-
-    (void)wifi8266_publish_status("online");
 
     while (wifi8266_mqtt_connected == TX_TRUE)
     {
       if (sensor_data_read(&sensor_data) == TX_SUCCESS)
       {
-        if (wifi8266_publish_telemetry(&sensor_data) == TX_SUCCESS)
+        if (wifi8266_publish_nodes_telemetry(&sensor_data) == TX_SUCCESS)
         {
           wifi8266_publish_count++;
         }
         else
         {
           wifi8266_debug_write("[ESP8266] telemetry publish failed\r\n");
-          wifi8266_mqtt_connected = TX_FALSE;
+          wifi8266_report_offline();
           break;
         }
       }
@@ -238,8 +244,52 @@ static UINT wifi8266_subscribe_command(void)
     return TX_NOT_DONE;
   }
 
+  if ((wifi8266_send_cmd("AT+MQTTSUB=0,\"" WIFI8266_TOPIC_NODE_COMMANDS "\",0\r\n") != TX_SUCCESS) ||
+      (wifi8266_wait_for("OK", "ERROR", 3000U, TX_FALSE) != TX_SUCCESS))
+  {
+    return TX_NOT_DONE;
+  }
+
   wifi8266_debug_write("[ESP8266] MQTT SUB COMMAND OK\r\n");
   return TX_SUCCESS;
+}
+
+static UINT wifi8266_publish_node_registry(void)
+{
+  char payload[WIFI8266_JSON_BUF_SIZE];
+
+  (void)snprintf(payload,
+                 sizeof(payload),
+                 "{\"version\":1,\"deviceId\":\"%s\",\"nodes\":["
+                 "{\"nodeId\":\"%s\",\"name\":\"%s\",\"type\":\"%s\",\"online\":1},"
+                 "{\"nodeId\":\"%s\",\"name\":\"%s\",\"type\":\"%s\",\"online\":0},"
+                 "{\"nodeId\":\"%s\",\"name\":\"%s\",\"type\":\"%s\",\"online\":0},"
+                 "{\"nodeId\":\"%s\",\"name\":\"%s\",\"type\":\"%s\",\"online\":0}]}",
+                 WIFI8266_MQTT_CLIENT_ID,
+                 WIFI8266_NODE_ROOM_TH_ID,
+                 WIFI8266_NODE_ROOM_TH_NAME,
+                 WIFI8266_NODE_ROOM_TH_TYPE,
+                 WIFI8266_NODE_LIVING_TH_ID,
+                 WIFI8266_NODE_LIVING_TH_NAME,
+                 WIFI8266_NODE_LIVING_TH_TYPE,
+                 WIFI8266_NODE_ROOM_LIGHT_ID,
+                 WIFI8266_NODE_ROOM_LIGHT_NAME,
+                 WIFI8266_NODE_ROOM_LIGHT_TYPE,
+                 WIFI8266_NODE_LIVING_LIGHT_ID,
+                 WIFI8266_NODE_LIVING_LIGHT_NAME,
+                 WIFI8266_NODE_LIVING_LIGHT_TYPE);
+
+  return wifi8266_mqtt_publish_ex(WIFI8266_TOPIC_META_NODES, payload, TX_TRUE);
+}
+
+static UINT wifi8266_publish_availability(const char *state)
+{
+  if (state == TX_NULL)
+  {
+    state = "unknown";
+  }
+
+  return wifi8266_mqtt_publish_ex(WIFI8266_TOPIC_AVAILABILITY, state, TX_TRUE);
 }
 
 static UINT wifi8266_publish_status(const char *state)
@@ -258,7 +308,51 @@ static UINT wifi8266_publish_status(const char *state)
                  state,
                  (unsigned long)tx_time_get());
 
-  return wifi8266_mqtt_publish(WIFI8266_TOPIC_STATUS, payload);
+  return wifi8266_mqtt_publish_ex(WIFI8266_TOPIC_STATUS, payload, TX_TRUE);
+}
+
+static UINT wifi8266_publish_node_status(const char *topic, const char *node_id, const char *type, const char *state)
+{
+  char payload[WIFI8266_JSON_BUF_SIZE];
+
+  if ((topic == TX_NULL) || (node_id == TX_NULL) || (type == TX_NULL))
+  {
+    return TX_PTR_ERROR;
+  }
+
+  if (state == TX_NULL)
+  {
+    state = "unknown";
+  }
+
+  (void)snprintf(payload,
+                 sizeof(payload),
+                 "{\"deviceId\":\"%s\",\"nodeId\":\"%s\",\"type\":\"%s\",\"state\":\"%s\",\"tick\":%lu}",
+                 WIFI8266_MQTT_CLIENT_ID,
+                 node_id,
+                 type,
+                 state,
+                 (unsigned long)tx_time_get());
+
+  return wifi8266_mqtt_publish(topic, payload);
+}
+
+static UINT wifi8266_publish_preset_node_status(void)
+{
+  (void)wifi8266_publish_node_status(WIFI8266_NODE_ROOM_LIGHT_STATUS_TOPIC,
+                                     WIFI8266_NODE_ROOM_LIGHT_ID,
+                                     WIFI8266_NODE_ROOM_LIGHT_TYPE,
+                                     "offline");
+  (void)wifi8266_publish_node_status(WIFI8266_NODE_LIVING_TH_STATUS_TOPIC,
+                                     WIFI8266_NODE_LIVING_TH_ID,
+                                     WIFI8266_NODE_LIVING_TH_TYPE,
+                                     "offline");
+  (void)wifi8266_publish_node_status(WIFI8266_NODE_LIVING_LIGHT_STATUS_TOPIC,
+                                     WIFI8266_NODE_LIVING_LIGHT_ID,
+                                     WIFI8266_NODE_LIVING_LIGHT_TYPE,
+                                     "offline");
+
+  return TX_SUCCESS;
 }
 
 static UINT wifi8266_publish_telemetry(const sensor_data_t *data)
@@ -272,8 +366,10 @@ static UINT wifi8266_publish_telemetry(const sensor_data_t *data)
 
   (void)snprintf(payload,
                  sizeof(payload),
-                 "{\"deviceId\":\"%s\",\"seq\":%lu,\"tick\":%lu,\"Temp\":%ld.%02ld,\"Hum\":%ld.%02ld,\"raw\":%u,\"valid\":%u}",
+                 "{\"deviceId\":\"%s\",\"nodeId\":\"%s\",\"sensorType\":\"%s\",\"seq\":%lu,\"tick\":%lu,\"Temp\":%ld.%02ld,\"Hum\":%ld.%02ld,\"raw\":%u,\"valid\":%u}",
                  WIFI8266_MQTT_CLIENT_ID,
+                 WIFI8266_NODE_ROOM_TH_ID,
+                 WIFI8266_NODE_ROOM_TH_TYPE,
                  (unsigned long)data->sequence,
                  (unsigned long)data->tick,
                  (long)(data->temperature_c_x100 / 100),
@@ -283,10 +379,51 @@ static UINT wifi8266_publish_telemetry(const sensor_data_t *data)
                  (unsigned int)data->debug_value,
                  (unsigned int)data->valid);
 
-  return wifi8266_mqtt_publish(WIFI8266_TOPIC_TELEMETRY, payload);
+  return wifi8266_mqtt_publish(WIFI8266_NODE_ROOM_TH_TELEMETRY_TOPIC, payload);
+}
+
+static UINT wifi8266_publish_nodes_telemetry(const sensor_data_t *data)
+{
+  char payload[WIFI8266_JSON_BUF_SIZE];
+
+  if (data == TX_NULL)
+  {
+    return TX_PTR_ERROR;
+  }
+
+  (void)snprintf(payload,
+                 sizeof(payload),
+                 "{\"deviceId\":\"%s\",\"seq\":%lu,\"tick\":%lu,\"nodes\":["
+                 "{\"nodeId\":\"%s\",\"type\":\"%s\",\"Temp\":%ld.%02ld,\"Hum\":%ld.%02ld,\"value\":0,\"valid\":%u},"
+                 "{\"nodeId\":\"%s\",\"type\":\"%s\",\"Temp\":0.00,\"Hum\":0.00,\"value\":0,\"valid\":0},"
+                 "{\"nodeId\":\"%s\",\"type\":\"%s\",\"Temp\":0.00,\"Hum\":0.00,\"value\":0,\"valid\":0},"
+                 "{\"nodeId\":\"%s\",\"type\":\"%s\",\"Temp\":0.00,\"Hum\":0.00,\"value\":0,\"valid\":0}]}",
+                 WIFI8266_MQTT_CLIENT_ID,
+                 (unsigned long)data->sequence,
+                 (unsigned long)data->tick,
+                 WIFI8266_NODE_ROOM_TH_ID,
+                 WIFI8266_NODE_ROOM_TH_TYPE,
+                 (long)(data->temperature_c_x100 / 100),
+                 (long)(data->temperature_c_x100 >= 0 ? data->temperature_c_x100 % 100 : -(data->temperature_c_x100 % 100)),
+                 (long)(data->humidity_rh_x100 / 100),
+                 (long)(data->humidity_rh_x100 >= 0 ? data->humidity_rh_x100 % 100 : -(data->humidity_rh_x100 % 100)),
+                 (unsigned int)data->valid,
+                 WIFI8266_NODE_LIVING_TH_ID,
+                 WIFI8266_NODE_LIVING_TH_TYPE,
+                 WIFI8266_NODE_ROOM_LIGHT_ID,
+                 WIFI8266_NODE_ROOM_LIGHT_TYPE,
+                 WIFI8266_NODE_LIVING_LIGHT_ID,
+                 WIFI8266_NODE_LIVING_LIGHT_TYPE);
+
+  return wifi8266_mqtt_publish(WIFI8266_TOPIC_NODES_TELEMETRY, payload);
 }
 
 static UINT wifi8266_mqtt_publish(const char *topic, const char *payload)
+{
+  return wifi8266_mqtt_publish_ex(topic, payload, TX_FALSE);
+}
+
+static UINT wifi8266_mqtt_publish_ex(const char *topic, const char *payload, UINT retain)
 {
   char cmd[WIFI8266_CMD_BUF_SIZE];
   uint16_t payload_len;
@@ -300,9 +437,10 @@ static UINT wifi8266_mqtt_publish(const char *topic, const char *payload)
 
   (void)snprintf(cmd,
                  sizeof(cmd),
-                 "AT+MQTTPUBRAW=0,\"%s\",%u,0,0\r\n",
+                 "AT+MQTTPUBRAW=0,\"%s\",%u,0,%u\r\n",
                  topic,
-                 (unsigned int)payload_len);
+                 (unsigned int)payload_len,
+                 retain == TX_TRUE ? 1U : 0U);
 
   if ((wifi8266_send_cmd(cmd) != TX_SUCCESS) ||
       (wifi8266_wait_for(">", "ERROR", 3000U, TX_FALSE) != TX_SUCCESS))
@@ -328,6 +466,11 @@ static UINT wifi8266_mqtt_publish(const char *topic, const char *payload)
   }
 
   return TX_SUCCESS;
+}
+
+static void wifi8266_report_offline(void)
+{
+  wifi8266_mqtt_connected = TX_FALSE;
 }
 
 static UINT wifi8266_send_cmd(const char *cmd)
