@@ -459,6 +459,11 @@
               <FilePath>../App/WIFI_8266/wifi_8266.c</FilePath>
             </File>
             <File>
+              <FileName>wifi_8266_provision.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/WIFI_8266/wifi_8266_provision.c</FilePath>
+            </File>
+            <File>
               <FileName>sensor_data.c</FileName>
               <FileType>1</FileType>
               <FilePath>../App/WIFI_8266/sensor_data.c</FilePath>

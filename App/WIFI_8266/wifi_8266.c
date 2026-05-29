@@ -4,6 +4,7 @@
 #include "sensor_data.h"
 #include "usart.h"
 #include "wifi_8266_config.h"
+#include "wifi_8266_provision.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -17,6 +18,7 @@ static uint8_t wifi8266_rx_ring[WIFI8266_RX_RING_SIZE];
 static volatile uint16_t wifi8266_rx_head;
 static volatile uint16_t wifi8266_rx_tail;
 static UINT wifi8266_mqtt_connected;
+static wifi8266_provision_config_t wifi8266_wifi_config;
 
 volatile UINT wifi8266_blink_thread_count;
 volatile UINT wifi8266_log_thread_count;
@@ -26,6 +28,7 @@ volatile UINT wifi8266_publish_count;
 volatile UINT wifi8266_command_count;
 
 static UINT wifi8266_send_cmd(const char *cmd);
+static UINT wifi8266_send_cmd_hidden(const char *log_text, const char *cmd);
 static UINT wifi8266_send_cmd_no_flush(const char *cmd);
 static UINT wifi8266_wait_for(const char *ok_token, const char *fail_token, ULONG timeout_ticks, UINT quiet_timeout);
 static UINT wifi8266_wait_for_token(const char *token, ULONG timeout_ticks);
@@ -74,6 +77,7 @@ void wifi8266_service_thread_entry(ULONG thread_input)
 
   (void)sensor_data_init();
   (void)HAL_UART_Receive_IT(&huart1, &wifi8266_rx_byte, 1U);
+  (void)wifi8266_provision_run(&wifi8266_wifi_config);
 
   for (;;)
   {
@@ -82,6 +86,7 @@ void wifi8266_service_thread_entry(ULONG thread_input)
     if (wifi8266_connect_wifi() != TX_SUCCESS)
     {
       wifi8266_debug_write("[ESP8266] WIFI connect failed, retry later\r\n");
+      (void)wifi8266_provision_run(&wifi8266_wifi_config);
       tx_thread_sleep(5000U);
       continue;
     }
@@ -142,6 +147,16 @@ void wifi8266_debug_write(const char *text)
 
 static UINT wifi8266_connect_wifi(void)
 {
+  const char *ssid = WIFI8266_WIFI_SSID;
+  const char *password = WIFI8266_WIFI_PASS;
+  char cmd[WIFI8266_CMD_BUF_SIZE];
+
+  if (wifi8266_wifi_config.valid != 0U)
+  {
+    ssid = wifi8266_wifi_config.ssid;
+    password = wifi8266_wifi_config.password;
+  }
+
   wifi8266_debug_write("\r\n[ESP8266] STEP WIFI: AT\r\n");
   if ((wifi8266_send_cmd("AT\r\n") != TX_SUCCESS) ||
       (wifi8266_wait_for("OK", "ERROR", 200U, TX_FALSE) != TX_SUCCESS))
@@ -164,7 +179,17 @@ static UINT wifi8266_connect_wifi(void)
   }
 
   wifi8266_debug_write("\r\n[ESP8266] STEP WIFI: JOIN\r\n");
-  if ((wifi8266_send_cmd("AT+CWJAP=\"" WIFI8266_WIFI_SSID "\",\"" WIFI8266_WIFI_PASS "\"\r\n") != TX_SUCCESS) ||
+  wifi8266_debug_write("[ESP8266] WIFI SSID: ");
+  wifi8266_debug_write(ssid);
+  wifi8266_debug_write("\r\n");
+
+  (void)snprintf(cmd,
+                 sizeof(cmd),
+                 "AT+CWJAP=\"%s\",\"%s\"\r\n",
+                 ssid,
+                 password);
+
+  if ((wifi8266_send_cmd_hidden("[ESP8266] TX: AT+CWJAP=<hidden>\r\n", cmd) != TX_SUCCESS) ||
       (wifi8266_wait_for("OK", "ERROR", 20000U, TX_FALSE) != TX_SUCCESS))
   {
     return TX_NOT_DONE;
@@ -247,7 +272,7 @@ static UINT wifi8266_publish_telemetry(const sensor_data_t *data)
 
   (void)snprintf(payload,
                  sizeof(payload),
-                 "{\"deviceId\":\"%s\",\"seq\":%lu,\"tick\":%lu,\"temperature\":%ld.%02ld,\"humidity\":%ld.%02ld,\"raw\":%u,\"valid\":%u}",
+                 "{\"deviceId\":\"%s\",\"seq\":%lu,\"tick\":%lu,\"Temp\":%ld.%02ld,\"Hum\":%ld.%02ld,\"raw\":%u,\"valid\":%u}",
                  WIFI8266_MQTT_CLIENT_ID,
                  (unsigned long)data->sequence,
                  (unsigned long)data->tick,
@@ -309,6 +334,31 @@ static UINT wifi8266_send_cmd(const char *cmd)
 {
   wifi8266_rx_flush();
   return wifi8266_send_cmd_no_flush(cmd);
+}
+
+static UINT wifi8266_send_cmd_hidden(const char *log_text, const char *cmd)
+{
+  wifi8266_rx_flush();
+
+  if (cmd == TX_NULL)
+  {
+    return TX_PTR_ERROR;
+  }
+
+  if (log_text != TX_NULL)
+  {
+    wifi8266_debug_write(log_text);
+  }
+
+  if (HAL_UART_Transmit(&huart1,
+                        (uint8_t *)cmd,
+                        (uint16_t)strlen(cmd),
+                        300U) != HAL_OK)
+  {
+    return TX_NOT_DONE;
+  }
+
+  return TX_SUCCESS;
 }
 
 static UINT wifi8266_send_cmd_no_flush(const char *cmd)
