@@ -20,14 +20,14 @@
 #define WIFI8266_NODE_ROOM_TH_ID              "room_temp_humi"
 #define WIFI8266_NODE_ROOM_TH_TYPE            "dht11"
 
-#define WIFI8266_NODE_LIVING_TH_ID            "living_temp_humi"
-#define WIFI8266_NODE_LIVING_TH_TYPE          "temp_humi"
+#define WIFI8266_NODE_LIVING_TH_ID            "living_t_h"
+#define WIFI8266_NODE_LIVING_TH_TYPE          "t_h"
 
 #define WIFI8266_NODE_ROOM_LIGHT_ID           "room_light"
-#define WIFI8266_NODE_ROOM_LIGHT_TYPE         "light"
+#define WIFI8266_NODE_ROOM_LIGHT_TYPE         "PB0"
 
 #define WIFI8266_NODE_LIVING_LIGHT_ID           "living_light"
-#define WIFI8266_NODE_LIVING_LIGHT_TYPE         "light"
+#define WIFI8266_NODE_LIVING_LIGHT_TYPE         "PB1"
 
 #define WIFI8266_TOPIC_NODE_COMMANDS          WIFI8266_TOPIC_PREFIX "/nodes/+/command"
 
